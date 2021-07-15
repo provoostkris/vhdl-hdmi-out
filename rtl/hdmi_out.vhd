@@ -50,28 +50,28 @@ begin
     timing_hd1080p: if RESOLUTION = "HD1080P" generate
     begin
     clock: entity work.clock_gen(rtl)
-      generic map (CLKIN_PERIOD=>8.000, CLK_MULTIPLY=>59, CLK_DIVIDE=>5, CLKOUT0_DIV=>2, CLKOUT1_DIV=>10) -- 1080p
+      generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*59, CLK_DIVIDE=>5, CLKOUT0_DIV=>2, CLKOUT1_DIV=>10) -- 1080p
       port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk);
     end generate;
 
     timing_hd720p: if RESOLUTION = "HD720P" generate
     begin
     clock: entity work.clock_gen(rtl)
-        generic map (CLKIN_PERIOD=>8.000, CLK_MULTIPLY=>59, CLK_DIVIDE=>5, CLKOUT0_DIV=>4, CLKOUT1_DIV=>20) -- 720p
+        generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*59, CLK_DIVIDE=>5, CLKOUT0_DIV=>4, CLKOUT1_DIV=>20) -- 720p
         port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk);
     end generate;
 
     timing_vga: if RESOLUTION = "SVGA" generate
     begin
     clock: entity work.clock_gen(rtl)
-        generic map (CLKIN_PERIOD=>8.000, CLK_MULTIPLY=>8, CLK_DIVIDE=>1, CLKOUT0_DIV=>5, CLKOUT1_DIV=>25) -- 800x600
+        generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*8, CLK_DIVIDE=>1, CLKOUT0_DIV=>5, CLKOUT1_DIV=>25) -- 800x600
         port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk);
     end generate;
 
     timing_svga: if RESOLUTION = "VGA" generate
     begin
     clock: entity work.clock_gen(rtl)
-        generic map (CLKIN_PERIOD=>8.000, CLK_MULTIPLY=>8, CLK_DIVIDE=>1, CLKOUT0_DIV=>8, CLKOUT1_DIV=>40) -- 640x480
+        generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*8, CLK_DIVIDE=>1, CLKOUT0_DIV=>8, CLKOUT1_DIV=>40) -- 640x480
         port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk );
     end generate;
 
