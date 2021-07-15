@@ -32,6 +32,7 @@ end hdmi_out;
 
 architecture rtl of hdmi_out is
 
+    signal pixclk_rst     : std_logic;
     signal pixclk, serclk : std_logic;
     signal video_active   : std_logic := '0';
     signal video_data     : std_logic_vector(PIXEL_SIZE-1 downto 0);
@@ -50,14 +51,14 @@ begin
     timing_hd1080p: if RESOLUTION = "HD1080P" generate
     begin
     clock: entity work.clock_gen(rtl)
-      generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*59, CLK_DIVIDE=>5, CLKOUT0_DIV=>2, CLKOUT1_DIV=>10) -- 1080p
+      generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>59, CLK_DIVIDE=>5/5, CLKOUT0_DIV=>2, CLKOUT1_DIV=>10) -- 1080p
       port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk);
     end generate;
 
     timing_hd720p: if RESOLUTION = "HD720P" generate
     begin
     clock: entity work.clock_gen(rtl)
-        generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*59, CLK_DIVIDE=>5, CLKOUT0_DIV=>4, CLKOUT1_DIV=>20) -- 720p
+        generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>59, CLK_DIVIDE=>5/5, CLKOUT0_DIV=>4, CLKOUT1_DIV=>20) -- 720p
         port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk);
     end generate;
 
@@ -83,9 +84,19 @@ begin
     -- tmds signaling
     tmds_signaling: entity work.rgb2tmds(rtl)
         generic map (SERIES6=>SERIES6)
-        port map (rst=>rst, pixelclock=>pixclk, serialclock=>serclk,
+        port map (rst=>pixclk_rst, pixelclock=>pixclk, serialclock=>serclk,
         video_data=>video_data, video_active=>video_active, hsync=>hsync, vsync=>vsync,
         clk_p=>clk_p, clk_n=>clk_n, data_p=>data_p, data_n=>data_n);
+    
+    --! transfer reset in clock domain
+    p_rst: process (rst,pixclk)
+    begin
+      if rst = '1' then
+        pixclk_rst  <= '1';
+      elsif rising_edge(pixclk) then
+        pixclk_rst  <= '0';
+      end if;
+    end process p_rst;
 
     -- pattern generator
     gen_patt: if GEN_PATTERN = true generate
