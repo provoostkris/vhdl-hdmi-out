@@ -13,6 +13,7 @@ entity timing_generator is
         OBJECT_SIZE  : natural := 16
     );
     port(
+        rst           : in  std_logic;
         clk           : in  std_logic;
         hsync, vsync  : out std_logic;
         video_active  : out std_logic;
@@ -136,9 +137,9 @@ architecture rtl of timing_generator is
     );
 
     -- horizontal and vertical counters
-    signal hcount : unsigned(OBJECT_SIZE-1 downto 0) := (others => '0');
-    signal vcount : unsigned(OBJECT_SIZE-1 downto 0) := (others => '0');
-    signal timings : video_timing_type := HD720P_TIMING;
+    signal hcount  : unsigned(OBJECT_SIZE-1 downto 0) ;
+    signal vcount  : unsigned(OBJECT_SIZE-1 downto 0) ;
+    signal timings : video_timing_type;
 
 begin
 
@@ -148,9 +149,12 @@ begin
                VGA_TIMING    when RESOLUTION = "VGA";
 
     -- pixel counters
-    process (clk) is
+    process (rst,clk) is
     begin
-        if rising_edge(clk) then
+        if rst = '1' then
+          hcount <= ( others => '0');
+          vcount <= ( others => '0');
+        elsif rising_edge(clk) then
             if (hcount = timings.H_TOTAL) then
                 hcount <= (others => '0');
                 if (vcount = timings.V_TOTAL) then

@@ -8,6 +8,7 @@ use ieee.numeric_std.all;
 
 entity pattern_generator is
     port(
+        rst          : in  std_logic;
         clk          : in  std_logic;
         video_active : in  std_logic;
         rgb          : out std_logic_vector(23 downto 0)
@@ -16,19 +17,25 @@ end pattern_generator;
 
 architecture rtl of pattern_generator is
     type state_type is (s0, s1, s2, s3, s4, s5);
-    signal state : state_type := s0;
+    signal state : state_type;
 
-    signal r : unsigned(7 downto 0) := (others => '1');
-    signal b : unsigned(7 downto 0) := (others => '0');
-    signal g : unsigned(7 downto 0) := (others => '0');
+    signal r : unsigned(7 downto 0);
+    signal b : unsigned(7 downto 0);
+    signal g : unsigned(7 downto 0);
+    
 begin
 
     rgb <= std_logic_vector(r & g & b);
 
     -- color spectrum process
-    process(clk) is
+    process(rst,clk) is
     begin
-        if rising_edge(clk) then
+        if rst = '1' then
+          state   <= s0;
+          r       <= (others => '1');
+          b       <= (others => '0');
+          g       <= (others => '0');
+        elsif rising_edge(clk) then
             if video_active = '1' then
                 case state is
                 when s0 =>

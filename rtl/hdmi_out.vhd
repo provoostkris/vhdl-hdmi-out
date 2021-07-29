@@ -32,18 +32,18 @@ end hdmi_out;
 
 architecture rtl of hdmi_out is
 
-    signal pixclk_rst     : std_logic;
-    signal pixclk, serclk : std_logic;
-    signal video_active   : std_logic := '0';
-    signal video_data     : std_logic_vector(PIXEL_SIZE-1 downto 0);
-    signal vsync, hsync   : std_logic := '0';
-    signal pixel_x        : std_logic_vector(OBJECT_SIZE-1 downto 0);
-    signal pixel_y        : std_logic_vector(OBJECT_SIZE-1 downto 0);
-    signal object1x       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(500, OBJECT_SIZE));
-    signal object1y       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(140, OBJECT_SIZE));
-    signal object2x       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(240, OBJECT_SIZE));
-    signal object2y       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(340, OBJECT_SIZE));
-    signal backgrnd_rgb   : std_logic_vector(PIXEL_SIZE-1 downto 0) := x"FFFF00"; -- yellow
+  signal pixclk_rst     : std_logic;
+  signal pixclk, serclk : std_logic;
+  signal video_active   : std_logic;
+  signal video_data     : std_logic_vector(PIXEL_SIZE-1 downto 0);
+  signal vsync, hsync   : std_logic;
+  signal pixel_x        : std_logic_vector(OBJECT_SIZE-1 downto 0);
+  signal pixel_y        : std_logic_vector(OBJECT_SIZE-1 downto 0);
+  signal object1x       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(500, OBJECT_SIZE));
+  signal object1y       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(140, OBJECT_SIZE));
+  signal object2x       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(240, OBJECT_SIZE));
+  signal object2y       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(340, OBJECT_SIZE));
+  signal backgrnd_rgb   : std_logic_vector( PIXEL_SIZE-1 downto 0) := x"FFFF00"; -- yellow
 
 begin
 
@@ -62,14 +62,14 @@ begin
         port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk);
     end generate;
 
-    timing_vga: if RESOLUTION = "SVGA" generate
+    timing_svga: if RESOLUTION = "SVGA" generate
     begin
     clock: entity work.clock_gen(rtl)
         generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*8, CLK_DIVIDE=>1, CLKOUT0_DIV=>5, CLKOUT1_DIV=>25) -- 800x600
         port map (clk_i=>clk, clk0_o=>serclk, clk1_o=>pixclk);
     end generate;
 
-    timing_svga: if RESOLUTION = "VGA" generate
+    timing_vga: if RESOLUTION = "VGA" generate
     begin
     clock: entity work.clock_gen(rtl)
         generic map (CLKIN_PERIOD=>5*8.000, CLK_MULTIPLY=>5*8, CLK_DIVIDE=>1, CLKOUT0_DIV=>8, CLKOUT1_DIV=>40) -- 640x480
@@ -79,7 +79,7 @@ begin
     -- video timing
     timing: entity work.timing_generator(rtl)
         generic map (RESOLUTION => RESOLUTION, GEN_PIX_LOC => GEN_PIX_LOC, OBJECT_SIZE => OBJECT_SIZE)
-        port map (clk=>pixclk, hsync=>hsync, vsync=>vsync, video_active=>video_active, pixel_x=>pixel_x, pixel_y=>pixel_y);
+        port map (rst=>pixclk_rst, clk=>pixclk, hsync=>hsync, vsync=>vsync, video_active=>video_active, pixel_x=>pixel_x, pixel_y=>pixel_y);
 
     -- tmds signaling
     tmds_signaling: entity work.rgb2tmds(rtl)
@@ -102,7 +102,7 @@ begin
     gen_patt: if GEN_PATTERN = true generate
     begin
     pattern: entity work.pattern_generator(rtl)
-        port map (clk=>pixclk, video_active=>video_active, rgb=>video_data);
+        port map (rst=>pixclk_rst,clk=>pixclk, video_active=>video_active, rgb=>video_data);
     end generate;
 
     -- game object buffer

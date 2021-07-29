@@ -7,6 +7,7 @@ use ieee.numeric_std.all;
 
 entity tmds_encoder is
     port (
+        rst  : in  std_logic;
         clk  : in  std_logic;
         en   : in  std_logic;
         ctrl : in  std_logic_vector(1 downto 0);
@@ -23,9 +24,9 @@ architecture rtl of tmds_encoder is
 
     -- a positive value represents the excess number of 1's that have been transmitted
     -- a negative value represents the excess number of 0's that have been transmitted
-    signal disparity : signed(3 downto 0) := to_signed(0, 4);
+    signal disparity : signed(3 downto 0);
     -- difference between 1's and 0's (/2 since the last bit is never used)
-    signal diff : signed(3 downto 0) := to_signed(0, 4);
+    signal diff      : signed(3 downto 0);
 
 begin
 
@@ -74,9 +75,11 @@ begin
         diff <= to_signed(c-4, 4);
     end process;
 
-    process(clk) is
+    process(rst,clk) is
     begin
-        if rising_edge(clk) then
+        if rst = '1' then
+          disparity <= to_signed(0, 4);
+        elsif rising_edge(clk) then
             if en = '0' then
                 case ctrl is
                     when "00"   => dout <= "1101010100";

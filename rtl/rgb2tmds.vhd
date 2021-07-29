@@ -30,7 +30,7 @@ entity rgb2tmds is
 end rgb2tmds;
 
 architecture rtl of rgb2tmds is
-    signal enred, engreen, enblue : std_logic_vector(9 downto 0) := (others => '0');
+    signal enred, engreen, enblue : std_logic_vector(9 downto 0);
     signal sync : std_logic_vector(1 downto 0);
 
 begin
@@ -39,11 +39,11 @@ begin
 
     -- tmds encoder
     tb : entity work.tmds_encoder(rtl)
-        port map (clk=>pixelclock, en=>video_active, ctrl=>sync, din=>video_data(7  downto 0), dout=>enblue);
+        port map (rst=>rst,clk=>pixelclock, en=>video_active, ctrl=>sync, din=>video_data(7  downto 0), dout=>enblue);
     tr : entity work.tmds_encoder(rtl)
-        port map (clk=>pixelclock, en=>video_active, ctrl=>"00", din=>video_data(23 downto 16), dout=>enred);
+        port map (rst=>rst,clk=>pixelclock, en=>video_active, ctrl=>"00", din=>video_data(23 downto 16), dout=>enred);
     tg : entity work.tmds_encoder(rtl)
-        port map (clk=>pixelclock, en=>video_active, ctrl=>"00", din=>video_data(15 downto 8), dout=>engreen);
+        port map (rst=>rst,clk=>pixelclock, en=>video_active, ctrl=>"00", din=>video_data(15 downto 8), dout=>engreen);
 
     -- tmds output serializers
     ser_b: entity work.serializer(rtl)
