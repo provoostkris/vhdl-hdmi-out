@@ -22,7 +22,7 @@ architecture rtl of pattern_generator is
     signal r : unsigned(7 downto 0);
     signal b : unsigned(7 downto 0);
     signal g : unsigned(7 downto 0);
-    
+
 begin
 
     rgb <= std_logic_vector(r & g & b);
