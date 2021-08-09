@@ -107,8 +107,8 @@ architecture rtl of timing_generator is
         V_SYNC  =>    4,
         V_BP    =>   23,
         V_TOTAL =>  628,
-        H_POL   =>  '1',
-        V_POL   =>  '1',
+        H_POL   =>  '0',
+        V_POL   =>  '0',
         ACTIVE  =>  '1'
     );
 
@@ -155,9 +155,9 @@ begin
           hcount <= to_unsigned(0,hcount'length);
           vcount <= to_unsigned(0,vcount'length);
         elsif rising_edge(clk) then
-            if (to_integer(hcount) = timings.H_TOTAL) then
+            if (to_integer(hcount) = timings.H_TOTAL-1) then
                 hcount <= to_unsigned(0,hcount'length);
-                if (to_integer(vcount) = timings.V_TOTAL) then
+                if (to_integer(vcount) = timings.V_TOTAL-1) then
                     vcount <= to_unsigned(0,vcount'length);
                 else
                     vcount <= vcount + 1;
@@ -168,20 +168,43 @@ begin
         end if;
     end process;
 
-    -- generate video_active, hsync, and vsync signals based on the counters
-    video_active  <=       timings.ACTIVE when (to_integer(hcount) <  timings.H_VIDEO) and (to_integer(vcount) < timings.V_VIDEO ) else 
-                      not  timings.ACTIVE;
-    hsync         <=       timings.H_POL  when (to_integer(hcount) >= timings.H_VIDEO + timings.H_FP) and (to_integer(hcount) < timings.H_TOTAL - timings.H_BP) else 
-                      not  timings.H_POL;
-    vsync         <=       timings.V_POL  when (to_integer(vcount) >= timings.V_VIDEO + timings.V_FP) and (to_integer(vcount) < timings.V_TOTAL - timings.V_BP) else 
-                      not  timings.V_POL;
+    -- pixel syncronizers
+    process (rst,clk) is
+    begin
+        if rst = '1' then
+          video_active <= not  timings.ACTIVE;
+          hsync        <= not  timings.H_POL;
+          vsync        <= not  timings.V_POL;
+        elsif rising_edge(clk) then
+        
+          -- generate video_active, hsync, and vsync signals based on the counters
+          if (to_integer(hcount) <  timings.H_VIDEO) and (to_integer(vcount) < timings.V_VIDEO ) then
+            video_active <=      timings.ACTIVE;
+          else
+            video_active <= not  timings.ACTIVE;
+          end if;
+
+          if (to_integer(hcount) >= timings.H_VIDEO + timings.H_FP) and (to_integer(hcount) < timings.H_TOTAL-1 - timings.H_BP) then
+            hsync        <=      timings.H_POL;
+          else
+            hsync        <= not  timings.H_POL;
+          end if;
+          
+          if (to_integer(vcount) >= timings.V_VIDEO + timings.V_FP) and (to_integer(vcount) < timings.V_TOTAL-1 - timings.V_BP) then
+            vsync        <=      timings.V_POL;
+          else
+            vsync        <= not  timings.V_POL;
+          end if;
+          
+        end if;
+    end process;
 
     g0: if GEN_PIX_LOC = true generate
     begin
         -- send pixel locations
-        pixel_x <=  std_logic_vector(hcount) when to_integer(hcount) < timings.H_VIDEO else 
+        pixel_x <=  std_logic_vector(hcount) when to_integer(hcount) < timings.H_VIDEO else
                     std_logic_vector(to_unsigned(0,pixel_x'length));
-        pixel_y <=  std_logic_vector(vcount) when to_integer(vcount) < timings.V_VIDEO else 
+        pixel_y <=  std_logic_vector(vcount) when to_integer(vcount) < timings.V_VIDEO else
                     std_logic_vector(to_unsigned(0,pixel_x'length));
     end generate;
 
