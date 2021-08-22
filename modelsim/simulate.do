@@ -18,6 +18,7 @@ echo "Compiling design"
 
   vcom  -quiet -work work ../rtl/clock_gen.vhd
   vcom  -quiet -work work ../rtl/objectbuffer.vhd
+  vcom  -quiet -work work ../rtl/video_ram.vhd
   vcom  -quiet -work work ../rtl/tmds_encoder.vhd
   vcom  -quiet -work work ../rtl/serializer.vhd
   vcom  -quiet -work work ../rtl/rgb2tmds.vhd
@@ -31,7 +32,8 @@ echo "Compiling test bench"
 
 echo "start simulation"
 
-  vsim -gui -t ps -novopt work.tb_hdmi_out
+  #vsim -gui -t ps -novopt work.tb_hdmi_out
+  vsim -gui -t ps work.tb_hdmi_out
 
 echo "adding waves"
 
@@ -40,7 +42,23 @@ echo "adding waves"
   add wave    -expand      -group "uut0 i/o"   -ports         /tb_hdmi_out/uut0/*
   add wave    -expand      -group "uut0 sig"   -internal      /tb_hdmi_out/uut0/*
 
+  add wave    -expand      -group "video_ram"                 /tb_hdmi_out/uut0/gen_no_patt/video_ram/*
 
 echo "view wave forms"
   view wave
-  run 10 us
+  run 7 us
+  
+  configure wave -namecolwidth  250
+  configure wave -valuecolwidth 120
+  configure wave -justifyvalue right
+  configure wave -signalnamewidth 1
+  configure wave -snapdistance 10
+  configure wave -datasetprefix 0
+  configure wave -rowmargin 4
+  configure wave -childrowmargin 2
+  configure wave -gridoffset 0
+  configure wave -gridperiod 1
+  configure wave -griddelta 40
+  configure wave -timeline 1
+  configure wave -timelineunits us
+  update

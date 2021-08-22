@@ -13,7 +13,10 @@ use unisim.vcomponents.all;
 
 entity hdmi_out is
     generic (
-        RESOLUTION   : string  := "HD1080P"; -- HD1080P, HD720P, SVGA, VGA
+        RESOLUTION   : string  := "SVGA"; -- HD1080P, HD720P, SVGA, VGA
+        ram_d        : natural :=  9;  --! ram data size
+        ram_x        : natural :=  8;  --! ram addr size for x pixels (in 2**n)
+        ram_y        : natural :=  8;  --! ram addr size for y pixels (in 2**n)
         GEN_PATTERN  : boolean := false; -- generate pattern or objects
         GEN_PIX_LOC  : boolean := true; -- generate location counters for x / y coordinates
         OBJECT_SIZE  : natural := 16; -- size of the objects. should be higher than 11
@@ -23,8 +26,8 @@ entity hdmi_out is
     port(
         clk, rst : in std_logic;
         -- tmds output ports
-        clk_p : out std_logic;
-        clk_n : out std_logic;
+        clk_p  : out std_logic;
+        clk_n  : out std_logic;
         data_p : out std_logic_vector(2 downto 0);
         data_n : out std_logic_vector(2 downto 0)
     );
@@ -39,12 +42,15 @@ architecture rtl of hdmi_out is
   signal vsync, hsync   : std_logic;
   signal pixel_x        : std_logic_vector(OBJECT_SIZE-1 downto 0);
   signal pixel_y        : std_logic_vector(OBJECT_SIZE-1 downto 0);
-  signal object1x       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(500, OBJECT_SIZE));
-  signal object1y       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(140, OBJECT_SIZE));
+  signal object1x       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(400, OBJECT_SIZE));
+  signal object1y       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(300, OBJECT_SIZE));
   signal object2x       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(240, OBJECT_SIZE));
   signal object2y       : std_logic_vector(OBJECT_SIZE-1 downto 0) := std_logic_vector(to_unsigned(340, OBJECT_SIZE));
   signal backgrnd_rgb   : std_logic_vector( PIXEL_SIZE-1 downto 0) := x"FFFF00"; -- yellow
 
+  signal ram_wr_ena     : std_logic;
+  signal ram_wr_dat     : std_logic_vector(ram_d-1 downto 0);
+  signal ram_wr_add     : std_logic_vector(ram_x+ram_y-1 downto 0);
 begin
 
     -- generate 1x pixel and 5x serial clocks
@@ -87,7 +93,7 @@ begin
         port map (rst=>pixclk_rst, pixelclock=>pixclk, serialclock=>serclk,
         video_data=>video_data, video_active=>video_active, hsync=>hsync, vsync=>vsync,
         clk_p=>clk_p, clk_n=>clk_n, data_p=>data_p, data_n=>data_n);
-    
+
     --! transfer reset in clock domain
     p_rst: process (rst,pixclk)
     begin
@@ -106,14 +112,48 @@ begin
     end generate;
 
     -- game object buffer
-    gen_obj: if GEN_PATTERN = false generate
+    gen_no_patt: if GEN_PATTERN = false generate
     begin
-    objbuf: entity work.objectbuffer(rtl)
-        generic map (OBJECT_SIZE=>OBJECT_SIZE, PIXEL_SIZE =>PIXEL_SIZE)
-        port map (video_active=>video_active, pixel_x=>pixel_x, pixel_y=>pixel_y,
-        object1x=>object1x, object1y=>object1y,
-        object2x=>object2x, object2y=>object2y,
-        backgrnd_rgb=>backgrnd_rgb, rgb=>video_data);
+
+    -- dummy data generator
+    process(pixclk_rst, pixclk) is
+      variable v_cnt  : unsigned(PIXEL_SIZE-1 downto 0);
+    begin
+        if pixclk_rst='1' then
+            ram_wr_add <= ( others => '0');
+            ram_wr_dat <= ( others => '0');
+            ram_wr_ena <= '1';
+            v_cnt      := ( others => '0');
+        elsif rising_edge(pixclk) then
+            v_cnt      := v_cnt + 1 ;
+            ram_wr_add <= std_logic_vector(v_cnt(ram_wr_add'range));
+            ram_wr_dat <= std_logic_vector(v_cnt(ram_wr_dat'range));
+            ram_wr_ena <= '1';
+        end if;
+    end process;
+
+    --! video_ram instance
+    video_ram: entity work.video_ram(rtl)
+        generic map (
+          RESOLUTION => RESOLUTION,
+          OBJECT_SIZE =>OBJECT_SIZE,
+          PIXEL_SIZE  =>PIXEL_SIZE,
+          ram_x =>ram_x,
+          ram_y =>ram_y,
+          ram_d =>ram_d
+          )
+        port map (
+          rst=>pixclk_rst,
+          pixclk=>pixclk,
+          video_active=>video_active,
+          pixel_x=>pixel_x,
+          pixel_y=>pixel_y,
+          ram_wr_ena=>ram_wr_ena,
+          ram_wr_dat=>ram_wr_dat,
+          ram_wr_add=>ram_wr_add,
+          rgb=>video_data
+          );
+
     end generate;
 
 end rtl;
