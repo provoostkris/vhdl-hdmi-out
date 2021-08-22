@@ -25,7 +25,7 @@ architecture rtl of tb_hdmi_out is
     --   Thus, this will downgrade it to OSERDESE1
     --   for simulation under GHDL
     constant SERIES6     : boolean := true;     -- use OSERDES1/2
-    constant RESOLUTION  : string  := "HD720P"; -- HD720P, SVGA, VGA
+    constant RESOLUTION  : string  := "VGA"; -- HD720P, SVGA, VGA
     constant GEN_PATTERN : boolean := false;    -- generate pattern or objects
     constant GEN_PIX_LOC : boolean := true;     -- generate location counters for x / y coordinates
     constant OBJECT_SIZE : natural := 16;       -- size of the objects. should be higher than 11
