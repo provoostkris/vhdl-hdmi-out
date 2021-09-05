@@ -36,7 +36,7 @@ echo "start simulation"
   vsim -gui -t ps work.tb_hdmi_out
 
 echo "adding waves"
-
+  view wave
   delete wave /*
   
   add wave    -expand      -group "uut0 i/o"   -ports         /tb_hdmi_out/uut0/*
@@ -45,7 +45,7 @@ echo "adding waves"
   add wave    -expand      -group "video_ram"                 /tb_hdmi_out/uut0/gen_no_patt/video_ram/*
 
 echo "view wave forms"
-  view wave
+
   run 7 us
   
   configure wave -namecolwidth  250

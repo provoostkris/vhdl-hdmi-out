@@ -23,6 +23,7 @@ entity video_ram is
         video_active       : in  std_logic;
         pixel_x            : in  std_logic_vector(object_size-1 downto 0);
         pixel_y            : in  std_logic_vector(object_size-1 downto 0);
+        ram_wr_clk         : in  std_logic;
         ram_wr_ena         : in  std_logic;
         ram_wr_dat         : in  std_logic_vector(ram_d-1 downto 0);
         ram_wr_add         : in  std_logic_vector(ram_x+ram_y-1 downto 0);
@@ -71,11 +72,9 @@ begin
     ram_rd_add  <= to_integer(pix_x) + to_integer(pix_y)*dim_x;
 
     -- write data in memory
-    process(rst, pixclk) is
+    process(ram_wr_clk) is
     begin
-        if rst='1' then
-          null;
-        elsif rising_edge(pixclk) then
+        if rising_edge(ram_wr_clk) then
           if ram_wr_ena = '1' then
             memory(to_integer(unsigned(ram_wr_add))) <= ram_wr_dat;
           end if;
