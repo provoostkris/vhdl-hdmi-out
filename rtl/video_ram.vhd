@@ -33,7 +33,8 @@ end video_ram;
 
 architecture rtl of video_ram is
 
-    constant bpp        : natural := ram_d / 3; --! bit per pixel
+    constant bppi       : natural := ram_d      / 3; --! bit per pixel input
+    constant bppo       : natural := pixel_size / 3; --! bit per pixel output
     constant dim_x      : natural := 2**ram_x;  --! dimention of RAM
     constant dim_y      : natural := 2**ram_y;  --! dimention of RAM
     -- memory
@@ -100,15 +101,16 @@ begin
           rgb <= ( others => '0'); --blank
         else
           -- by default set some grey value
-          rgb(1*8-1 downto 0*8) <= x"10";
-          rgb(2*8-1 downto 1*8) <= x"10";
-          rgb(3*8-1 downto 2*8) <= x"10";
+          rgb           <= ( others => '0');
+          rgb(1*bppo-2) <= '1';
+          rgb(2*bppo-2) <= '1';
+          rgb(3*bppo-2) <= '1';
           if ram_draw_x = '1' and ram_draw_y = '1' then
             -- assign the memory data to pixel format
-            -- hard coded for bbp in 8 bit per color out
-            rgb(1*8-1 downto 1*8-bpp)  <= ram_rd_dat(1*bpp-1 downto 0*bpp);
-            rgb(2*8-1 downto 2*8-bpp)  <= ram_rd_dat(2*bpp-1 downto 1*bpp);
-            rgb(3*8-1 downto 3*8-bpp)  <= ram_rd_dat(3*bpp-1 downto 2*bpp);
+            rgb                          <= ( others => '0');
+            rgb(1*bppi-1 downto 0*bppi)  <= ram_rd_dat(1*bppi-1 downto 0*bppi);
+            rgb(2*bppi-1 downto 1*bppi)  <= ram_rd_dat(2*bppi-1 downto 1*bppi);
+            rgb(3*bppi-1 downto 2*bppi)  <= ram_rd_dat(3*bppi-1 downto 2*bppi);
           end if;
         end if;
     end process;
