@@ -10,7 +10,6 @@ use ieee.numeric_std.all;
 
 entity video_ram is
     generic (
-        resolution  : string  := "svga"; -- hd1080p, hd720p, svga, vga
         ram_d       : natural :=  9;  --! ram data size (evenly divided over RGB)
         ram_x       : natural :=  8;  --! ram addr size for x pixels (in 2**n)
         ram_y       : natural :=  8;  --! ram addr size for y pixels (in 2**n)
